@@ -2,10 +2,8 @@
 
 echo "Enter repeat count"
 read repeatCount
-echo "Enter label"
-read label
 
-echo "Bit Rate,Tx-Power,Retry short limit,RTS thr,Fragment thr,Link Quality,Rx invalid nwid,Rx invalid crypt,Rx invalid frag,Tx excessive retries,Invalid misc,Missed beacon,Frequency,Channel,Encryption key,inactive time,tx bytes,authorized,authenticated,associated,WMM/WME,TDLS peer,DTIM period,beacon interval,short slot time,connection.autoconnect,connection.autoconnect-priority,connection.autoconnect-retries,connection.multi-connect,connection.auth-retries,connection.read-only,connection.zone,connection.master,connection.slave-type,connection.autoconnect-slaves,connection.secondaries,connection.gateway-ping-timeout,connection.mdns,connection.llmnr,connection.wait-device-timeout,802-11-wireless.band,802-11-wireless.channel,802-11-wireless.bssid,802-11-wireless.rate,802-11-wireless.tx-power,802-11-wireless.hidden,802-11-wireless.powersave,802-11-wireless.ap-isolation,802-11-wireless-security.wep-tx-keyidx,802-11-wireless-security.proto,802-11-wireless-security.pairwise,802-11-wireless-security.group,802-11-wireless-security.pmf,802-11-wireless-security.psk-flags,802-11-wireless-security.fils,ipv4.dns-priority,ipv4.route-metric,ipv4.route-table,ipv4.ignore-auto-routes,ipv4.ignore-auto-dns,ipv4.dhcp-iaid,ipv4.dhcp-timeout,ipv4.dhcp-send-hostname,ipv4.never-default,ipv4.may-fail,ipv4.dad-timeout,ipv6.route-metric,ipv6.ignore-auto-routes,ipv6.ignore-auto-dns,ipv6.never-default,ipv6.may-fail,ipv6.dhcp-timeout,GENERAL.DEFAULT,GENERAL.DEFAULT6,GENERAL.VPN,GENERAL.ZONE,GENERAL.MASTER-PATH,GENERAL.MTU,GENERAL.IP4-CONNECTIVITY,GENERAL.IP6-CONNECTIVITY,GENERAL.IS-SOFTWARE,GENERAL.NM-MANAGED,GENERAL.AUTOCONNECT,GENERAL.FIRMWARE-MISSING,GENERAL.NM-PLUGIN-MISSING,GENERAL.METERED,WIFI-PROPERTIES.WEP,WIFI-PROPERTIES.WPA,WIFI-PROPERTIES.WPA2,WIFI-PROPERTIES.TKIP,WIFI-PROPERTIES.CCMP,WIFI-PROPERTIES.AP,WIFI-PROPERTIES.ADHOC,WIFI-PROPERTIES.2GHZ,WIFI-PROPERTIES.5GHZ,WIFI-PROPERTIES.MESH,WIFI-PROPERTIES.IBSS-RSN,WE,Group Cipher,Pairwise Ciphers,Mode,connection.lldp,802-11-wireless.mode,802-11-wireless.mode,802-11-wireless.mode,802-11-wireless.mode,802-11-wireless.mtu,802-11-wireless.wake-on-wlan,802-11-wireless-security.key-mgmt,802-11-wireless-security.auth-alg,ipv4.dhcp-hostname-flags,ipv6.method,GENERAL.STATE,label" > data.csv
+echo "Link Quality,Fragment thr,Rx invalid nwid,Rx invalid crypt,Invalid misc,Missed beacon,Encryption key,authorized,authenticated,associated,TDLS peer,DTIM period,connection.autoconnect,connection.autoconnect-retries,connection.multi-connect,connection.auth-retries,connection.autoconnect-slaves,connection.gateway-ping-timeout,connection.mdns,connection.wait-device-timeout,802-11-wireless.channel,802-11-wireless.rate,802-11-wireless.hidden,802-11-wireless.powersave,802-11-wireless.ap-isolation,802-11-wireless-security.pmf,802-11-wireless-security.psk-flags,802-11-wireless-security.fils,ipv4.route-metric,ipv4.route-table,ipv4.ignore-auto-routes,ipv4.dhcp-timeout,ipv4.dhcp-send-hostname,ipv4.never-default,ipv4.dad-timeout,ipv6.route-metric,ipv6.ignore-auto-routes,ipv6.never-default,ipv6.may-fail,ipv6.dhcp-timeout,GENERAL.VPN,GENERAL.MTU,GENERAL.IP4-CONNECTIVITY,GENERAL.IS-SOFTWARE,GENERAL.NM-MANAGED,GENERAL.AUTOCONNECT,GENERAL.NM-PLUGIN-MISSING,GENERAL.METERED,WIFI-PROPERTIES.WEP,WIFI-PROPERTIES.WPA2,WIFI-PROPERTIES.TKIP,WIFI-PROPERTIES.CCMP,WIFI-PROPERTIES.ADHOC,WIFI-PROPERTIES.2GHZ,WIFI-PROPERTIES.5GHZ,WIFI-PROPERTIES.IBSS-RSN,WE,label" > data.csv
 
 text=$(head -n 1 data.csv)
 
@@ -39,25 +37,18 @@ for ((i=1; i<=$repeatCount; i++)); do
 
 	for word in $text; do
 		if [[ "$word" == "label" ]]; then
-			value="$label"
+			link_quality=$(iwconfig wlan0 | grep -oP 'Link Quality=\K\d+(?=/\d+)')
+            		if [ "$link_quality" -ge 47 ]; then
+                		value="2"
+            		elif [ "$link_quality" -ge 24 ]; then
+                		value="1"
+            		else
+                		value="0"
+            		fi
+		elif [[ "$word" == "Link Quality" ]]; then
+			value=$(iwconfig wlan0 | grep -oP 'Link Quality=\K\d+(?=/\d+)')
 		elif [[ "$word" == "WE" ]]; then
                         value=$(cat /proc/net/wireless | awk 'FNR == 2 {print $17}')
-		elif [[ "$word" == "WPA1" ]]; then
-                        value=$(nmcli dev wifi | grep "$wifi_name" | grep -o "WPA1")
-			if [[ "$value" == "WPA1" ]]; then
-				value="yes"
-			else
-				value="no"
-			fi
-		elif [[ "$word" == "WPA2" ]]; then
-                        value=$(nmcli dev wifi | grep "$wifi_name" | grep -o "WPA2")
-                        if [[ "$value" == "WPA2" ]]; then
-                                value="yes"
-                        else
-                                value="no"
-                        fi
-		elif [[ "$word" == "IP4.ROUTE[1]" ]] || [[ "$word" == "IP4.ROUTE[2]" ]] || [[ "$word" == "IP6.ROUTE[1]" ]] || [[ "$word" == "IP6.ROUTE[2]" ]] || [[ "$word" == "IP6.ROUTE[3]" ]] || [[ "$word" == "IP6.ROUTE[4]" ]]; then
-			value=$(grep -F $word output.txt | grep "mt" | sed -n 's/.*= //p')
 		elif [[ "$word" == "GENERAL.NAME" ]] || [[ "$word" == "connection.id" ]] || [[ "$word" == "802-11-wireless.ssid" ]] || [[ "$word" == "GENERAL.CONNECTION" ]]; then
 			value=$(grep $word output.txt | sed -n 's/.*  //p')
 		elif echo "$word" | grep -q "DHCP4.OPTION"; then
