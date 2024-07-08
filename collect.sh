@@ -38,9 +38,9 @@ for ((i=1; i<=$repeatCount; i++)); do
 	for word in $text; do
 		if [[ "$word" == "label" ]]; then
 			link_quality=$(iwconfig wlan0 | grep -oP 'Link Quality=\K\d+(?=/\d+)')
-            		if [ "$link_quality" -ge 47 ]; then
+            		if [ "$link_quality" -ge 60 ]; then
                 		value="2"
-            		elif [ "$link_quality" -ge 24 ]; then
+            		elif [ "$link_quality" -ge 40 ]; then
                 		value="1"
             		else
                 		value="0"
